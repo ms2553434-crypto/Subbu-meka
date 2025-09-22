@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Personal Finance Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f5f6fa;
+    }
+
+    header {
+      background: #2f3640;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+
+    main {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      padding: 20px;
+    }
+
+    section {
+      background: #fff;
+      padding: 20px;
+      margin: 10px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      flex: 1;
+      min-width: 300px;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    form input, form select, form button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      text-align: left;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>💰 Personal Finance Tracker</h1>
+  </header>
+
+  <main>
+    <!-- Expense Form -->
+    <section>
+      <h2>Add Expense</h2>
+      <form id="expense-form">
+        <input type="text" id="category" placeholder="Category (e.g., Food)" required>
+        <input type="number" id="amount" placeholder="Amount ($)" min="0" step="0.01" required>
+        <button type="submit">Add Expense</button>
+      </form>
+    </section>
+
+    <!-- Expense Table -->
+    <section>
+      <h2>Expense List</h2>
+      <table id="expense-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Amount ($)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Expenses will be added here -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Expense Chart -->
+    <section>
+      <h2>Spending Breakdown</h2>
+      <canvas id="expense-chart"></canvas>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('expense-form');
+    const categoryInput = document.getElementById('category');
+    const amountInput = document.getElementById('amount');
+    const tableBody = document.querySelector('#expense-table tbody');
+
+    let expenses = [];
+
+    // Chart setup
+    const ctx = document.getElementById('expense-chart').getContext('2d');
+    let expenseChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Spending',
+          data: [],
+          backgroundColor: [
+            '#e84118',
+            '#00a8ff',
+            '#fbc531',
+            '#4cd137',
+            '#8c7ae6',
+            '#487eb0'
+          ]
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }
+    });
+
+    function updateChart() {
+      const categoryTotals = {};
+
+      expenses.forEach(exp => {
+        categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
+      });
+
+      expenseChart.data.labels = Object.keys(categoryTotals);
+      expenseChart.data.datasets[0].data = Object.values(categoryTotals);
+      expenseChart.update();
+    }
+
+    function addExpenseToTable(expense) {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${expense.category}</td>
+        <td>$${expense.amount.toFixed(2)}</td>
+      `;
+      tableBody.appendChild(row);
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const category = categoryInput.value.trim();
+      const amount = parseFloat(amountInput.value);
+
+      if (category && !isNaN(amount)) {
+        const newExpense = { category, amount };
+        expenses.push(newExpense);
+        addExpenseToTable(newExpense);
+        updateChart();
+
+        // Clear inputs
+        categoryInput.value = '';
+        amountInput.value = '';
+      }
+    });
+  </script>
+</body>
+</html>
